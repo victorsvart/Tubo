@@ -1,0 +1,62 @@
+{
+  "name": "tubo",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev",
+    "dev:backend": "tsx watch backend/src/server.ts",
+    "dev:electron": "tsc -p electron/tsconfig.json && cross-env NODE_ENV=development electron --no-sandbox electron/dist/main.js",
+    "dev:electron:wait": "wait-on http://localhost:3001 http://localhost:5173 && npm run dev:electron",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev\" \"npm run dev:electron\" --names \"backend,frontend,electron\" --prefix-colors \"blue,green,yellow\"",
+    "build": "npm run build:backend && npm run build:frontend && npm run build:electron",
+    "build:backend": "tsc -p backend/tsconfig.json",
+    "build:frontend": "react-router build",
+    "build:electron": "tsc -p electron/tsconfig.json",
+    "start": "node backend/dist/server.js",
+    "typecheck": "react-router typegen && tsc",
+    "electron:build": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "@react-router/node": "^7.9.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "isbot": "^5.1.31",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router": "^7.9.2",
+    "ytdlp-nodejs": "^2.3.4"
+  },
+  "devDependencies": {
+    "@react-router/dev": "^7.9.2",
+    "@tailwindcss/vite": "^4.1.13",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.18.8",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^38.2.1",
+    "electron-builder": "^26.0.12",
+    "nodemon": "^3.1.10",
+    "tailwindcss": "^4.1.13",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.7",
+    "vite-tsconfig-paths": "^5.1.4",
+    "wait-on": "^9.0.1"
+  },
+  "main": "electron/dist/main.js",
+  "build": {
+    "appId": "com.tubo.app",
+    "files": [
+      "build/**/*",
+      "electron/dist/**/*",
+      "backend/dist/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    }
+  }
+}

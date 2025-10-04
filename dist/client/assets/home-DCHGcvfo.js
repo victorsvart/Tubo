@@ -1,0 +1,1 @@
+import{w as n,p as e}from"./chunk-NISHYRIK-BGyfKEvS.js";function s({}){return[{title:"Home"},{name:"description",content:"Welcome!"}]}const a=n(function(){return e.jsx("div",{className:"min-h-screen bg-black flex",children:e.jsx("span",{className:"font-semibold font-sans",children:"hello"})})});export{a as default,s as meta};
