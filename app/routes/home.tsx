@@ -1,5 +1,17 @@
 import type { Route } from './+types/home';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Input } from '~/components/ui/input';
+import { Button } from '~/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '~/components/ui/card';
+import { Progress } from '~/components/ui/progress';
+import { Download } from 'lucide-react';
+import { cn } from '~/lib/utils'; // optional helper for conditional classes
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -13,108 +25,134 @@ export default function HomePage(): React.ReactElement {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const backendUrl = 'http://localhost:3001';
+  const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
-  const handleDownload = async (url: string) => {
-    if (!url.trim()) {
-      setMessage("URL can't be empty");
+  const clearProgress = () => {
+    if (progressInterval.current) clearInterval(progressInterval.current);
+    progressInterval.current = null;
+  };
+
+  useEffect(() => clearProgress, []);
+
+  const simulateProgress = () => {
+    clearProgress();
+    progressInterval.current = setInterval(() => {
+      setProgress((prev) => (prev < 90 ? prev + Math.random() * 3 : prev));
+    }, 200);
+  };
+
+  const handleDownload = async (videoUrl: string) => {
+    const trimmed = videoUrl.trim();
+    if (!trimmed) {
+      setMessage('Please enter a valid YouTube URL.');
       return;
     }
 
-    try {
-      setIsLoading(true);
-      setProgress(0);
-      setMessage('Starting download...');
+    setIsLoading(true);
+    setProgress(0);
+    setMessage('Starting download...');
+    simulateProgress();
 
-      const progressBar = setInterval(() => {
-        setProgress((prev) => {
-          if (prev < 90) return prev + Math.random() * 5;
-          return prev;
-        });
-      }, 300);
-      
-      const backendUrl = 'http://localhost:3001';
+    try {
       const response = await fetch(`${backendUrl}/api/video/download`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: trimmed }),
       });
 
       const data = await response.json();
+      clearProgress();
 
-      clearInterval(progressBar);
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to download video');
-      }
+      if (!response.ok)
+        throw new Error(data.error || 'Failed to download video.');
 
       setProgress(100);
-      setMessage(`Video downloaded successfully to: ${data.path}`);
-      
+      setMessage(`Video downloaded successfully: ${data.path}`);
+
       setTimeout(() => {
-        setUrl('');
         setIsLoading(false);
-      }, 1000)
-    } catch (error) {
-      setMessage('Error: ' + (error as Error).message);
+        setProgress(0);
+        setUrl('');
+        setMessage('');
+      }, 2500);
+    } catch (err) {
+      clearProgress();
       setIsLoading(false);
       setProgress(0);
-    } 
+      setMessage((err as Error).message);
+    }
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col">
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 select-none">
-        <svg className="w-6 h-6" viewBox="0 0 100 100" fill="none">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 text-zinc-100 flex flex-col">
+      {/* Header */}
+      <header className="border-b border-zinc-800 bg-zinc-900/60 backdrop-blur-md px-6 py-4 flex items-center gap-3 select-none shadow-md">
+        <svg className="w-7 h-7" viewBox="0 0 100 100" fill="none">
           <circle cx="50" cy="50" r="45" fill="#ef4444" />
           <polygon points="40,30 40,70 70,50" fill="white" />
         </svg>
-        <span className="font-semibold text-gray-800">Tubo</span>
-      </div>
+        <h1 className="font-semibold text-lg tracking-tight text-white">
+          Tubo
+        </h1>
+      </header>
 
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-2xl">
-          <div className="bg-white rounded-lg shadow border border-gray-200 p-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+      {/* Main Content */}
+      <main className="flex-1 flex items-center justify-center p-6">
+        <Card className="w-full max-w-xl border border-zinc-800 bg-zinc-900/90 text-zinc-100 shadow-xl rounded-2xl transition-all duration-300 hover:shadow-2xl">
+          <CardHeader>
+            <CardTitle className="text-2xl font-semibold flex items-center gap-2 text-white">
+              <Download className="w-5 h-5 text-red-500" />
               Download YouTube Videos
-            </h1>
-            <p className="text-gray-600 mb-6">
-              Paste a YouTube URL below to get started
-            </p>
+            </CardTitle>
+            <CardDescription className="text-zinc-400">
+              Paste a YouTube URL below to begin downloading.
+            </CardDescription>
+          </CardHeader>
 
-            <div className="space-y-4">
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyUp={(e) => e.key === 'Enter' && handleDownload(url)}
-                placeholder="https://www.youtube.com/watch?v=..."
-                className="w-full bg-white border text-black border-gray-300 rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              />
+          <CardContent className="space-y-5">
+            <Input
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyUp={(e) => e.key === 'Enter' && handleDownload(url)}
+              placeholder="https://www.youtube.com/watch?v=..."
+              disabled={isLoading}
+              className="text-sm bg-zinc-800 border-zinc-700 placeholder:text-zinc-500 text-zinc-100 focus:ring-red-500 focus:border-red-500"
+            />
 
-              <span className="text-red-500">{message}</span>
-
-              {isLoading && (
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-2 overflow-hidden">
-                  <div
-                    className="bg-red-500 h-2 rounded-full transition-all duration-200 ease-out"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              )}
-
-              <button
-                onClick={() => handleDownload(url)}
-                disabled={isLoading}
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-medium px-6 py-3 rounded-md transition-colors active:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            {message && (
+              <p
+                className={cn(
+                  'text-sm',
+                  message.startsWith('Video downloaded')
+                    ? 'text-green-400'
+                    : message.toLowerCase().includes('error') ||
+                        message.toLowerCase().includes('failed')
+                      ? 'text-red-400'
+                      : 'text-zinc-400',
+                )}
               >
-                {isLoading ? 'Downloading...' : 'Download Video'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+                {message}
+              </p>
+            )}
+
+            {isLoading && (
+              <div className="pt-1">
+                <Progress value={progress} className="h-2 bg-gray-300" />
+              </div>
+            )}
+
+            <Button
+              onClick={() => handleDownload(url)}
+              disabled={isLoading}
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-medium rounded-md transition-all duration-200 disabled:bg-zinc-700 disabled:text-zinc-400"
+            >
+              {isLoading ? 'Downloading...' : 'Download Video'}
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
     </div>
   );
 }
