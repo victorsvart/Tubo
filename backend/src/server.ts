@@ -18,6 +18,5 @@ app.get('/health', (req, res) => {
 app.use('/api/video', videoRoutes);
 
 app.listen(PORT, () => {
-  console.log(`🚀 Backend server running on http://localhost:${PORT}`);
+  console.log(`Backend server running on http://localhost:${PORT}`);
 });
-

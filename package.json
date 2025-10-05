@@ -18,13 +18,21 @@
     "electron:build": "npm run build && electron-builder"
   },
   "dependencies": {
+    "@radix-ui/react-accordion": "^1.2.12",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-progress": "^1.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
     "@react-router/node": "^7.9.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "isbot": "^5.1.31",
+    "lucide-react": "^0.544.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router": "^7.9.2",
+    "tailwind-merge": "^3.3.1",
     "ytdlp-nodejs": "^2.3.4"
   },
   "devDependencies": {
@@ -42,6 +50,7 @@
     "nodemon": "^3.1.10",
     "tailwindcss": "^4.1.13",
     "tsx": "^4.20.6",
+    "tw-animate-css": "^1.4.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.7",
     "vite-tsconfig-paths": "^5.1.4",
