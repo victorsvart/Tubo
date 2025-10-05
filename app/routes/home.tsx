@@ -12,6 +12,7 @@ export default function HomePage(): React.ReactElement {
   const [url, setUrl] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const handleDownload = async (url: string) => {
     if (!url.trim()) {
@@ -21,8 +22,16 @@ export default function HomePage(): React.ReactElement {
 
     try {
       setIsLoading(true);
+      setProgress(0);
       setMessage('Starting download...');
 
+      const progressBar = setInterval(() => {
+        setProgress((prev) => {
+          if (prev < 90) return prev + Math.random() * 5;
+          return prev;
+        });
+      }, 300);
+      
       const backendUrl = 'http://localhost:3001';
       const response = await fetch(`${backendUrl}/api/video/download`, {
         method: 'POST',
@@ -34,17 +43,24 @@ export default function HomePage(): React.ReactElement {
 
       const data = await response.json();
 
+      clearInterval(progressBar);
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to download video');
       }
 
+      setProgress(100);
       setMessage(`Video downloaded successfully to: ${data.path}`);
-      setUrl('');
+      
+      setTimeout(() => {
+        setUrl('');
+        setIsLoading(false);
+      }, 1000)
     } catch (error) {
       setMessage('Error: ' + (error as Error).message);
-    } finally {
       setIsLoading(false);
-    }
+      setProgress(0);
+    } 
   };
 
   return (
@@ -78,6 +94,15 @@ export default function HomePage(): React.ReactElement {
               />
 
               <span className="text-red-500">{message}</span>
+
+              {isLoading && (
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2 overflow-hidden">
+                  <div
+                    className="bg-red-500 h-2 rounded-full transition-all duration-200 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              )}
 
               <button
                 onClick={() => handleDownload(url)}
